@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juegos</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 3em;
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+      animation: pulso 2s infinite;
+    }
+
+    @keyframes pulso {
+      0%, 100% { text-shadow: 0 0 10px #0ff; }
+      50% { text-shadow: 0 0 30px #0ff; }
+    }
+
+    .botones {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .boton {
+      background: transparent;
+      border: 2px solid #ff00cc;
+      color: #ff00cc;
+      padding: 12px 25px;
+      font-size: 1.2em;
+      cursor: pointer;
+      text-decoration: none;
+      border-radius: 10px;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px #ff00cc;
+    }
+
+    .boton:hover {
+      background: #ff00cc;
+      color: black;
+      box-shadow: 0 0 20px #ff00cc, 0 0 30px #ff00cc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Juegos</h1>
+  <div class="botones">
+    <a class="boton" href="ahorcado.html">Ahorcado</a>
+    <a class="boton" href="habilidad.html">Habilidad Mental</a>
+    <a class="boton" href="memorama.html">Memorama</a>
+    <a class="boton" href="index.html"><---Regresar</a>
+    
+  </div>
+</body>
+</html>

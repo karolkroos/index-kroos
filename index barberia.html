@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Barbería Profesional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            margin-bottom: 3rem;
+            text-align: center;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .card {
+            width: 320px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            animation: fadeInUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0px 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-image {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover .card-image img {
+            transform: scale(1.1);
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: rotate(360deg);
+        }
+
+        .icon-history { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+        .icon-pole { background: linear-gradient(135deg, #ef4444, #2563eb); }
+        .icon-cuts { background: linear-gradient(135deg, #10b981, #0d9488); }
+        .icon-barbers { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+
+        .card-tooltip {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .card:hover .card-tooltip {
+            opacity: 1;
+        }
+
+        .card-content {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            color: #1e293b;
+            transition: background 0.3s ease;
+        }
+
+        .card:hover .card-content {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+
+        .card-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #7c3aed;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .play-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Content Display Styles */
+        .content-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .back-button {
+            align-self: flex-start;
+            margin-bottom: 30px;
+            padding: 12px 24px;
+            background: #0d9488;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.3);
+        }
+
+        .back-button:hover {
+            background: #ff00cc;
+            color: black;
+            box-shadow: 0 0 30px rgba(255, 0, 204, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        .content-card {
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            position: relative;
+        }
+
+        .content-card.pole-theme {
+            background: linear-gradient(135deg, #ef4444, #2563eb);
+        }
+
+        .content-card.cuts-theme {
+            background: linear-gradient(135deg, #10b981, #0d9488);
+        }
+
+        .content-card.barbers-theme {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        .content-inner {
+            background: rgba(17, 24, 39, 0.95);
+            border-radius: 18px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .content-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+        }
+
+        .content-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: bold;
+            color: white;
+        }
+
+        .typing-container {
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #374151;
+        }
+
+        .typing-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #e5e7eb;
+            white-space: pre-wrap;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 24px;
+            background: #ec4899;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .cards-container {
+                gap: 20px;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            .content-inner {
+                padding: 25px;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main View -->
+    <div id="mainView" class="main-container">
+        <h1 class="main-title">Portal Barbería</h1>
+        
+        <div class="cards-container">
+            <!-- Historia Card -->
+            <div class="card" onclick="showContent('history')">
+                <div class="card-image">
+                    <img src="https://images.pexels.com/photos/1813272/pexels-photo-1813272.jpeg" alt="Historia de la Barbería">
+                    <div class="card-overlay"></div>
+                    <div class="card-icon icon-history">⏰</div>
+                    <div class="card-tooltip">Haz clic para leer más</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Historia de la Barbería</h3>
+                    <p class="card-description">
+                        Desde la antigüedad, las barberías han sido mucho más que simples establecimientos de aseo personal. Eran centros sociales donde los hombres se reunían...
+                    </p>
+                    <div class="card-action">
+                        <svg class="play-icon" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <span>Leer completo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Caramelo Card -->
+            <div class="card" onclick="showContent('pole')">
+                <div class="card-image">
+                    <img src="https://images.pexels.com/photos/1319460/pexels-photo-1319460.jpeg" alt="Significado del Caramelo">
+                    <div class="card-overlay"></div>
+                    <div class="card-icon icon-pole">🎨</div>
+                    <div class="card-tooltip">Haz clic para leer más</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Significado del Caramelo</h3>
+                    <p class="card-description">
+                        El icónico poste giratorio de la barbería, conocido como "barber pole", tiene un origen fascinante que se remonta a la Edad Media...
+                    </p>
+                    <div class="card-action">
+                        <svg class="play-icon" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <span>Leer completo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cortes Card -->
+            <div class="card" onclick="showContent('cuts')">
+                <div class="card-image">
+                    <img src="https://images.pexels.com/photos/1570807/pexels-photo-1570807.jpeg" alt="Tipos de Cortes">
+                    <div class="card-overlay"></div>
+                    <div class="card-icon icon-cuts">✂️</div>
+                    <div class="card-tooltip">Haz clic para leer más</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Tipos de Cortes</h3>
+                    <p class="card-description">
+                        El arte del corte masculino ha evolucionado enormemente, ofreciendo estilos para cada personalidad y ocasión. El Fade, con su degradado perfecto...
+                    </p>
+                    <div class="card-action">
+                        <svg class="play-icon" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <span>Leer completo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barberos Card -->
+            <div class="card" onclick="showContent('barbers')">
+                <div class="card-image">
+                    <img src="https://images.pexels.com/photos/1570807/pexels-photo-1570807.jpeg" alt="Mejores Barberos">
+                    <div class="card-overlay"></div>
+                    <div class="card-icon icon-barbers">👥</div>
+                    <div class="card-tooltip">Haz clic para leer más</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Mejores Barberos</h3>
+                    <p class="card-description">
+                        En el mundo del grooming masculino, algunos nombres destacan por su maestría excepcional y contribución al arte de la barbería...
+                    </p>
+                    <div class="card-action">
+                        <svg class="play-icon" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <span>Leer completo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Display View -->
+    <div id="contentView" class="content-display">
+        <button class="back-button" onclick="goBack()">
+            <span>←</span>
+            Regresar
+        </button>
+        
+        <div class="content-wrapper">
+            <div id="contentCard" class="content-card">
+                <div class="content-inner">
+                    <div class="content-header">
+                        <div id="contentIcon" class="content-icon">⏰</div>
+                        <h2 id="contentTitle" class="content-title">Título</h2>
+                    </div>
+                    
+                    <div class="typing-container">
+                        <div id="typingText" class="typing-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const content = {
+            history: {
+                title: 'Historia de la Barbería',
+                icon: '⏰',
+                theme: 'history-theme',
+                text: 'Desde la antigüedad, las barberías han sido mucho más que simples establecimientos de aseo personal. Eran centros sociales donde los hombres se reunían para compartir historias, debatir política y fortalecer lazos comunitarios. Los barberos no solo cortaban cabello y afeitaban barbas, sino que también actuaban como cirujanos menores, dentistas y consejeros. Esta tradición milenaria ha evolucionado, pero el espíritu de comunidad y craftsmanship sigue siendo el corazón de cada barbería moderna. El arte del barbero requiere años de práctica y dedicación, combinando técnica precisa con sensibilidad artística para crear no solo un corte, sino una experiencia transformadora.'
+            },
+            pole: {
+                title: 'Significado del Caramelo',
+                icon: '🎨',
+                theme: 'pole-theme',
+                text: 'El icónico poste giratorio de la barbería, conocido como "barber pole", tiene un origen fascinante que se remonta a la Edad Media. Los colores rojo, blanco y azul representan respectivamente: la sangre de las cirugías menores, las vendas limpias y la limpieza del establecimiento. Los barberos cirujanos medievales realizaban sangrías y pequeñas operaciones, anunciando sus servicios con este distintivo símbolo. El movimiento espiral del poste simboliza el flujo de la sangre, mientras que el blanco representa las vendas utilizadas para detener el sangrado. Hoy en día, el poste sigue siendo el emblema universal que identifica a las barberías auténticas, manteniendo viva una tradición que conecta el pasado con el presente.'
+            },
+            cuts: {
+                title: 'Tipos de Cortes',
+                icon: '✂️',
+                theme: 'cuts-theme',
+                text: 'El arte del corte masculino ha evolucionado enormemente, ofreciendo estilos para cada personalidad y ocasión. El Fade, con su degradado perfecto desde las sienes hasta la nuca, requiere precisión milimétrica; el Taper, más sutil y profesional, ideal para ambientes corporativos; el Pompadour, clásico y elegante con volumen superior que evoca la sofisticación vintage; el Undercut, moderno y versátil, perfecto para expresar individualidad; el Corte Clásico, atemporal y refinado que nunca pasa de moda. Cada estilo requiere técnica especializada, comprensión profunda de la estructura facial, textura del cabello y un ojo artístico para crear el look perfecto que no solo defina la personalidad de cada cliente, sino que también complemente su estilo de vida.'
+            },
+            barbers: {
+                title: 'Mejores Barberos',
+                icon: '👥',
+                theme: 'barbers-theme',
+                text: 'En el mundo del grooming masculino, algunos nombres destacan por su maestría excepcional y contribución al arte de la barbería. Karol Kroos es reconocido internacionalmente por su precisión técnica incomparable y su capacidad única para crear estilos personalizados que realzan la personalidad y características únicas de cada cliente. Su enfoque meticuloso y atención al detalle lo han convertido en una leyenda viviente. Sherk, por su parte, es famoso por su arte innovador y su habilidad extraordinaria para combinar técnicas clásicas centenarias con las tendencias más contemporáneas del grooming moderno. Estos maestros artesanos no solo cortan cabello, sino que esculpen identidades, creando experiencias transformadoras que van mucho más allá del simple servicio de barbería, elevándolo a una forma de arte.'
+            }
+        };
+
+        let typingInterval;
+        let isTyping = false;
+
+        function showContent(contentKey) {
+            const selectedContent = content[contentKey];
+            if (!selectedContent) return;
+
+            // Hide main view and show content view
+            document.getElementById('mainView').style.display = 'none';
+            document.getElementById('contentView').style.display = 'flex';
+
+            // Update content elements
+            document.getElementById('contentTitle').textContent = selectedContent.title;
+            document.getElementById('contentIcon').textContent = selectedContent.icon;
+            
+            // Apply theme
+            const contentCard = document.getElementById('contentCard');
+            contentCard.className = `content-card ${selectedContent.theme}`;
+
+            // Start typing animation
+            startTyping(selectedContent.title + '\n\n' + selectedContent.text);
+        }
+
+        function startTyping(text) {
+            const typingElement = document.getElementById('typingText');
+            clearInterval(typingInterval);
+            typingElement.innerHTML = '';
+            
+            let i = 0;
+            isTyping = true;
+
+            typingInterval = setInterval(() => {
+                if (i < text.length) {
+                    typingElement.textContent = text.substring(0, i + 1);
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                    isTyping = false;
+                    // Remove cursor after typing is complete
+                    setTimeout(() => {
+                        const cursor = typingElement.querySelector('.cursor');
+                        if (cursor) cursor.remove();
+                    }, 1000);
+                }
+            }, 30);
+
+            // Add blinking cursor
+            const addCursor = () => {
+                if (isTyping) {
+                    const cursor = document.createElement('span');
+                    cursor.className = 'cursor';
+                    typingElement.appendChild(cursor);
+                }
+            };
+            
+            setTimeout(addCursor, 100);
+        }
+
+        function goBack() {
+            clearInterval(typingInterval);
+            document.getElementById('contentView').style.display = 'none';
+            document.getElementById('mainView').style.display = 'flex';
+            document.getElementById('typingText').innerHTML = '';
+            isTyping = false;
+        }
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                goBack();
+            }
+        });
+    </script>
+</body>
+</html>

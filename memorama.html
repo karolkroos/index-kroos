@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Memorama </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e1b4b 0%, #581c87 50%, #be185d 100%);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background effects */
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .bg-circle:nth-child(1) {
+            top: 25%;
+            left: 25%;
+            width: 288px;
+            height: 288px;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .bg-circle:nth-child(2) {
+            top: 75%;
+            right: 25%;
+            width: 384px;
+            height: 384px;
+            background: rgba(139, 92, 246, 0.1);
+            animation-delay: 1s;
+        }
+
+        .bg-circle:nth-child(3) {
+            bottom: 25%;
+            left: 33%;
+            width: 320px;
+            height: 320px;
+            background: rgba(236, 72, 153, 0.1);
+            animation-delay: 2s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.125rem;
+        }
+
+        /* Game Stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .new-game-btn {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            transform: scale(1);
+        }
+
+        .new-game-btn:hover {
+            background: linear-gradient(to right, #2563eb, #7c3aed);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Game Board */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-width: 512px;
+            margin: 0 auto 2rem;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            animation: matchPulse 0.6s ease-in-out;
+        }
+
+        @keyframes matchPulse {
+            0%, 100% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+
+        .card-back:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-back-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #ffffff, #f3f4f6);
+            border-color: #d1d5db;
+            transform: rotateY(180deg);
+        }
+
+        .card-front.matched {
+            background: linear-gradient(135deg, #4ade80, #10b981);
+            border-color: #86efac;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            color: #374151;
+        }
+
+        .card-front.matched .card-icon {
+            color: white;
+        }
+
+        /* Victory Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 400px;
+            margin: 1rem;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+            animation: bounce 0.6s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: scale(1); }
+            40%, 43% { transform: scale(1.1); }
+            70% { transform: scale(1.05); }
+        }
+
+        .modal-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .modal-subtitle {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-stats {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-stat-label {
+            color: #6b7280;
+        }
+
+        .modal-stat-value {
+            font-weight: 600;
+        }
+
+        .modal-stat-value.moves {
+            color: #3b82f6;
+        }
+
+        .modal-stat-value.time {
+            color: #10b981;
+        }
+
+        .modal-btn {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:hover {
+            background: linear-gradient(to right, #2563eb, #7c3aed);
+            transform: scale(1.05);
+        }
+
+        /* Instructions */
+        .instructions {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 512px;
+            margin: 0 auto;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 3rem;
+            }
+            
+            .stats {
+                gap: 1rem;
+            }
+            
+            .game-board {
+                gap: 0.75rem;
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .game-board {
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background effects -->
+    <div class="bg-effects">
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">Memorama</h1>
+            <p class="subtitle">Encuentra todos los pares y desafía tu memoria</p>
+        </div>
+
+        <!-- Game Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Movimientos: <span id="moves">0</span></span>
+            </div>
+            
+            <div class="stat-card">
+                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Tiempo: <span id="time">0:00</span></span>
+            </div>
+
+            <button class="new-game-btn" onclick="initializeGame()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Nuevo Juego
+            </button>
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board" id="gameBoard">
+            <!-- Cards will be generated by JavaScript -->
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <p>
+                Haz clic en las cartas para voltearlas y encuentra todos los pares. 
+                ¡Completa el juego con el menor número de movimientos posible!
+            </p>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal">
+            <div class="modal-emoji">🎉</div>
+            <h2 class="modal-title">
+                <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24" style="color: #eab308;">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+                ¡Felicidades!
+            </h2>
+            <p class="modal-subtitle">Has completado el memorama</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat">
+                    <span class="modal-stat-label">Movimientos:</span>
+                    <span class="modal-stat-value moves" id="finalMoves">0</span>
+                </div>
+                <div class="modal-stat">
+                    <span class="modal-stat-label">Tiempo:</span>
+                    <span class="modal-stat-value time" id="finalTime">0:00</span>
+                </div>
+            </div>
+            
+            <button class="modal-btn" onclick="initializeGame()">
+                Jugar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let cards = [];
+        let flippedCards = [];
+        let moves = 0;
+        let time = 0;
+        let gameWon = false;
+        let gameStarted = false;
+        let isCheckingMatch = false;
+        let timer = null;
+
+        // Card icons (using SVG paths)
+        const CARD_ICONS = [
+            // Heart
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>`,
+            // Star
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>`,
+            // Crown
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5z"></path>
+            </svg>`,
+            // Diamond
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 3h12l4 6-10 12L2 9l4-6z"></path>
+            </svg>`,
+            // Flower
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"></path>
+                <path d="M12 2a2.5 2.5 0 0 1 2.5 2.5c0 .44-.12.86-.33 1.22A2.5 2.5 0 0 1 12 8.5a2.5 2.5 0 0 1-2.17-2.78A2.49 2.49 0 0 1 9.5 4.5 2.5 2.5 0 0 1 12 2z"></path>
+            </svg>`,
+            // Sun
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>`,
+            // Moon
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>`,
+            // Lightning
+            `<svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"></polygon>
+            </svg>`
+        ];
+
+        // Initialize game
+        function initializeGame() {
+            cards = [];
+            flippedCards = [];
+            moves = 0;
+            time = 0;
+            gameWon = false;
+            gameStarted = false;
+            isCheckingMatch = false;
+            
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+
+            // Create card pairs
+            CARD_ICONS.forEach((icon, index) => {
+                cards.push(
+                    { id: index * 2, icon, isFlipped: false, isMatched: false },
+                    { id: index * 2 + 1, icon, isFlipped: false, isMatched: false }
+                );
+            });
+
+            // Shuffle cards
+            cards = cards.sort(() => Math.random() - 0.5);
+
+            // Update UI
+            updateStats();
+            renderBoard();
+            hideVictoryModal();
+        }
+
+        // Render game board
+        function renderBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = `card ${card.isFlipped ? 'flipped' : ''} ${card.isMatched ? 'matched' : ''}`;
+                cardElement.onclick = () => flipCard(card.id);
+
+                cardElement.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-back">
+                            <div class="card-back-icon"></div>
+                        </div>
+                        <div class="card-face card-front ${card.isMatched ? 'matched' : ''}">
+                            <div class="card-icon">${card.icon}</div>
+                        </div>
+                    </div>
+                `;
+
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        // Flip card
+        function flipCard(cardId) {
+            if (isCheckingMatch || flippedCards.length >= 2) return;
+            
+            const card = cards.find(c => c.id === cardId);
+            if (!card || card.isFlipped || card.isMatched) return;
+
+            startGame();
+            
+            flippedCards.push(cardId);
+            card.isFlipped = true;
+            
+            renderBoard();
+
+            // Check for match when two cards are flipped
+            if (flippedCards.length === 2) {
+                isCheckingMatch = true;
+                moves++;
+                updateStats();
+                
+                const [firstId, secondId] = flippedCards;
+                const firstCard = cards.find(c => c.id === firstId);
+                const secondCard = cards.find(c => c.id === secondId);
+                
+                setTimeout(() => {
+                    if (firstCard && secondCard && firstCard.icon === secondCard.icon) {
+                        // Match found
+                        firstCard.isMatched = true;
+                        secondCard.isMatched = true;
+                        
+                        // Check for game completion
+                        if (cards.every(card => card.isMatched)) {
+                            gameWon = true;
+                            gameStarted = false;
+                            if (timer) {
+                                clearInterval(timer);
+                                timer = null;
+                            }
+                            showVictoryModal();
+                        }
+                    } else {
+                        // No match - flip cards back
+                        firstCard.isFlipped = false;
+                        secondCard.isFlipped = false;
+                    }
+                    
+                    flippedCards = [];
+                    isCheckingMatch = false;
+                    renderBoard();
+                }, 1000);
+            }
+        }
+
+        // Start game
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                timer = setInterval(() => {
+                    time++;
+                    updateStats();
+                }, 1000);
+            }
+        }
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('time').textContent = formatTime(time);
+        }
+
+        // Format time display
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Show victory modal
+        function showVictoryModal() {
+            document.getElementById('finalMoves').textContent = moves;
+            document.getElementById('finalTime').textContent = formatTime(time);
+            document.getElementById('victoryModal').classList.add('show');
+        }
+
+        // Hide victory modal
+        function hideVictoryModal() {
+            document.getElementById('victoryModal').classList.remove('show');
+        }
+
+        // Initialize game on page load
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>

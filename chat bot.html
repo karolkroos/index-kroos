@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutbolBot - Asistente de Fútbol Profesional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #059669, #10b981);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .bot-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff, #f1f5f9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .chat-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .bot-avatar-small {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .user-avatar-small {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .bot .message-content {
+            background: linear-gradient(135deg, #374151, #4b5563);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #374151, #4b5563);
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            color: #60a5fa;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .match-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .team-flag {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .match-info {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .chat-title {
+                font-size: 1.5rem;
+            }
+            
+            .quick-actions {
+                justify-content: center;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.5);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="bot-avatar">⚽</div>
+            <h1 class="chat-title">FutbolBot</h1>
+            <p class="chat-subtitle">Tu asistente experto en fútbol mundial</p>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-avatar bot-avatar-small">⚽</div>
+                <div class="message-content">
+                    ¡Hola! Soy FutbolBot, tu asistente personal de fútbol. Puedo ayudarte con:
+                    <br><br>
+                    🏆 Resultados y estadísticas de partidos<br>
+                    📊 Información de ligas y torneos<br>
+                    👥 Datos de jugadores y equipos<br>
+                    📈 Análisis y predicciones<br>
+                    🎯 Reglas y curiosidades del fútbol<br><br>
+                    ¿En qué puedo ayudarte hoy?
+                </div>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="message-avatar bot-avatar-small">⚽</div>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-container">
+            <div class="quick-actions">
+                <div class="quick-action" onclick="sendQuickMessage('¿Cuáles son los resultados de hoy?')">Resultados de hoy</div>
+                <div class="quick-action" onclick="sendQuickMessage('Tabla de posiciones La Liga')">La Liga</div>
+                <div class="quick-action" onclick="sendQuickMessage('Champions League')">Champions</div>
+                <div class="quick-action" onclick="sendQuickMessage('Mejores goleadores')">Goleadores</div>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Pregúntame sobre fútbol..." onkeypress="handleKeyPress(event)">
+                <button class="send-button" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Football knowledge base
+        const footballData = {
+            teams: {
+                'real madrid': {
+                    name: 'Real Madrid',
+                    league: 'La Liga',
+                    founded: 1902,
+                    stadium: 'Santiago Bernabéu',
+                    titles: 'Champions League: 14, La Liga: 35',
+                    coach: 'Carlo Ancelotti',
+                    stars: ['Vinícius Jr.', 'Jude Bellingham', 'Luka Modrić']
+                },
+                'barcelona': {
+                    name: 'FC Barcelona',
+                    league: 'La Liga',
+                    founded: 1899,
+                    stadium: 'Camp Nou',
+                    titles: 'Champions League: 5, La Liga: 27',
+                    coach: 'Xavi Hernández',
+                    stars: ['Robert Lewandowski', 'Pedri', 'Gavi']
+                },
+                'manchester city': {
+                    name: 'Manchester City',
+                    league: 'Premier League',
+                    founded: 1880,
+                    stadium: 'Etihad Stadium',
+                    titles: 'Champions League: 1, Premier League: 9',
+                    coach: 'Pep Guardiola',
+                    stars: ['Erling Haaland', 'Kevin De Bruyne', 'Phil Foden']
+                }
+            },
+            players: {
+                'messi': {
+                    name: 'Lionel Messi',
+                    team: 'Inter Miami',
+                    position: 'Delantero',
+                    age: 36,
+                    goals: '800+ goles en su carrera',
+                    achievements: 'Balón de Oro: 8, Copa del Mundo: 1'
+                },
+                'cristiano': {
+                    name: 'Cristiano Ronaldo',
+                    team: 'Al Nassr',
+                    position: 'Delantero',
+                    age: 39,
+                    goals: '850+ goles en su carrera',
+                    achievements: 'Balón de Oro: 5, Eurocopa: 1'
+                },
+                'haaland': {
+                    name: 'Erling Haaland',
+                    team: 'Manchester City',
+                    position: 'Delantero',
+                    age: 23,
+                    goals: '36 goles en Premier League 2022-23',
+                    achievements: 'Champions League: 1, Premier League: 1'
+                }
+            },
+            leagues: {
+                'la liga': {
+                    name: 'La Liga Santander',
+                    country: 'España',
+                    teams: 20,
+                    current_champion: 'Real Madrid',
+                    top_scorer: 'Robert Lewandowski'
+                },
+                'premier league': {
+                    name: 'Premier League',
+                    country: 'Inglaterra',
+                    teams: 20,
+                    current_champion: 'Manchester City',
+                    top_scorer: 'Erling Haaland'
+                },
+                'champions league': {
+                    name: 'UEFA Champions League',
+                    country: 'Europa',
+                    teams: 32,
+                    current_champion: 'Manchester City',
+                    format: 'Fase de grupos + Eliminatorias'
+                }
+            }
+        };
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar ${isUser ? 'user-avatar-small' : 'bot-avatar-small'}">
+                    ${isUser ? '👤' : '⚽'}
+                </div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        function generateResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Team information
+            for (const [key, team] of Object.entries(footballData.teams)) {
+                if (lowerMessage.includes(key)) {
+                    return `
+                        <strong>🏆 ${team.name}</strong><br><br>
+                        📍 <strong>Liga:</strong> ${team.league}<br>
+                        🏟️ <strong>Estadio:</strong> ${team.stadium}<br>
+                        📅 <strong>Fundado:</strong> ${team.founded}<br>
+                        🏆 <strong>Títulos:</strong> ${team.titles}<br>
+                        👨‍💼 <strong>Entrenador:</strong> ${team.coach}<br>
+                        ⭐ <strong>Estrellas:</strong> ${team.stars.join(', ')}
+                    `;
+                }
+            }
+
+            // Player information
+            for (const [key, player] of Object.entries(footballData.players)) {
+                if (lowerMessage.includes(key)) {
+                    return `
+                        <strong>⚽ ${player.name}</strong><br><br>
+                        🏟️ <strong>Equipo:</strong> ${player.team}<br>
+                        📍 <strong>Posición:</strong> ${player.position}<br>
+                        🎂 <strong>Edad:</strong> ${player.age} años<br>
+                        ⚽ <strong>Goles:</strong> ${player.goals}<br>
+                        🏆 <strong>Logros:</strong> ${player.achievements}
+                    `;
+                }
+            }
+
+            // League information
+            for (const [key, league] of Object.entries(footballData.leagues)) {
+                if (lowerMessage.includes(key.replace(' ', ''))) {
+                    return `
+                        <strong>🏆 ${league.name}</strong><br><br>
+                        🌍 <strong>País:</strong> ${league.country}<br>
+                        👥 <strong>Equipos:</strong> ${league.teams}<br>
+                        🥇 <strong>Campeón actual:</strong> ${league.current_champion}<br>
+                        ⚽ <strong>Máximo goleador:</strong> ${league.top_scorer || 'Información no disponible'}
+                    `;
+                }
+            }
+
+            // Match results simulation
+            if (lowerMessage.includes('resultado') || lowerMessage.includes('partido')) {
+                return createMatchCard();
+            }
+
+            // Statistics
+            if (lowerMessage.includes('estadística') || lowerMessage.includes('goleador')) {
+                return createStatsCard();
+            }
+
+            // Rules and general info
+            if (lowerMessage.includes('regla') || lowerMessage.includes('offside') || lowerMessage.includes('fuera de juego')) {
+                return `
+                    <strong>📋 Reglas del Fútbol</strong><br><br>
+                    ⚽ <strong>Fuera de juego:</strong> Un jugador está en posición de fuera de juego si está más cerca de la línea de gol que el balón y el penúltimo oponente.<br><br>
+                    🟨 <strong>Tarjetas:</strong> Amarilla (amonestación), Roja (expulsión)<br><br>
+                    ⏱️ <strong>Tiempo:</strong> 90 minutos + tiempo adicional<br><br>
+                    👥 <strong>Jugadores:</strong> 11 por equipo en el campo
+                `;
+            }
+
+            // Default responses
+            const responses = [
+                "¡Excelente pregunta sobre fútbol! 🏆 Puedes preguntarme sobre equipos específicos como Real Madrid, Barcelona, Manchester City, o sobre jugadores como Messi, Cristiano, Haaland.",
+                "🔥 ¡El fútbol es pasión! Pregúntame sobre ligas (La Liga, Premier League, Champions League), resultados, estadísticas o reglas del juego.",
+                "⚽ Como experto en fútbol, puedo ayudarte con información actualizada sobre equipos, jugadores, torneos y mucho más. ¿Qué te interesa saber?",
+                "🏟️ ¡Hablemos de fútbol! Puedo darte información sobre cualquier aspecto del deporte rey. Intenta preguntar sobre tu equipo favorito o jugador preferido."
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function createMatchCard() {
+            const matches = [
+                { team1: 'Real Madrid', team2: 'Barcelona', score1: 2, score2: 1, status: 'Finalizado' },
+                { team1: 'Manchester City', team2: 'Liverpool', score1: 3, score2: 2, status: 'En vivo' },
+                { team1: 'PSG', team2: 'Bayern Munich', score1: 1, score2: 1, status: 'Próximo' }
+            ];
+            
+            const match = matches[Math.floor(Math.random() * matches.length)];
+            
+            return `
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="team">
+                            <div class="team-flag"></div>
+                            <span>${match.team1}</span>
+                        </div>
+                        <div class="score">${match.score1} - ${match.score2}</div>
+                        <div class="team">
+                            <span>${match.team2}</span>
+                            <div class="team-flag"></div>
+                        </div>
+                    </div>
+                    <div class="match-info">
+                        Estado: ${match.status} | Champions League | Estadio: Santiago Bernabéu
+                    </div>
+                </div>
+            `;
+        }
+
+        function createStatsCard() {
+            return `
+                <strong>📊 Estadísticas de la Temporada</strong><br><br>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">36</div>
+                        <div class="stat-label">Goles Haaland</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Asistencias KDB</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">89%</div>
+                        <div class="stat-label">Precisión Pases</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">28</div>
+                        <div class="stat-label">Partidos Ganados</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, true);
+            chatInput.value = '';
+
+            // Show typing indicator
+            showTyping();
+
+            // Simulate bot response delay
+            setTimeout(() => {
+                hideTyping();
+                const response = generateResponse(message);
+                addMessage(response);
+            }, 1500 + Math.random() * 1000);
+        }
+
+        function sendQuickMessage(message) {
+            chatInput.value = message;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Auto-focus input
+        chatInput.focus();
+    </script>
+</body>
+</html>
